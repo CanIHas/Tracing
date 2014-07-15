@@ -43,15 +43,20 @@ class Tracer {
     }
 
     protected <T> T withTrace(List<ExceptionAwareProxyMetaClass> proxies, Closure<T> c){
-        if (proxies.empty)
+//        println "withTrace(proxies: $proxies, c: $c)"
+        if (proxies.empty) {
+//            println "empty proxies"
             return c();
+        }
         if (proxies.tail()) {
+//            println "proxies.head ${proxies.head()} ||.tail() ${proxies.tail()}"
             ProxyMetaClass proxy = proxies.head()
             proxy.interceptor = interceptor
             return proxy.use {
                 withTrace(proxies.tail(), c)
             }
         }
+//        println "proxies.head ${proxies.head()}"
         proxies.head().use c
     }
 

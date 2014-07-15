@@ -26,7 +26,8 @@ class TracedClass1 {
 
     @Trace(withStackTrace = true)
     def raisin(){
+//        println "wanna raise"
         recursive(-1)
-
+//        println "raised"
     }
 }

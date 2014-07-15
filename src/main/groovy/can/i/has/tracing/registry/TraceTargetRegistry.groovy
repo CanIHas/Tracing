@@ -17,6 +17,7 @@ class TraceTargetRegistry {
     Map<String, Map<String, Map<MethodSignature, TraceConfig>>> registry = [:]
 
     void registerMethod(Method method){
+//        println "registering $method"
         ensureStructure(method.declaringClass.name, method.name)
         def signature = new MethodSignature(method.parameterTypes, method.varArgs)
         def traceOptions = TraceConfig.forAnnotation(method.getAnnotation(Trace))
@@ -24,6 +25,7 @@ class TraceTargetRegistry {
     }
 
     void unregisterMethod(Method method){
+//        println "unregistering $method"
         def signature = new MethodSignature(method.parameterTypes, method.varArgs)
         def subregistry = registry[method.declaringClass.name][method.name]
         subregistry.remove(signature)

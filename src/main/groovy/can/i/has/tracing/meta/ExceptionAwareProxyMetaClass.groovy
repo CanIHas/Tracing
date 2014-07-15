@@ -17,7 +17,7 @@ class ExceptionAwareProxyMetaClass extends ProxyMetaClass {
     }
 
     public Object invokeMethod(final Object object, final String methodName, final Object[] arguments) {
-        return doCall(object, methodName, arguments, interceptor, new Callable() {
+        return doCall(object, methodName, arguments, super.interceptor, new Callable() {
             public Object call() {
                 return adaptee.invokeMethod(object, methodName, arguments);
             }
