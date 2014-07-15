@@ -1,0 +1,24 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'application'
+
+sourceCompatibility = 1.7
+version = '0.0.1-RESEARCH'
+
+repositories {
+    mavenCentral()
+}
+
+mainClassName = "can.i.has.tracing.TestScript"
+
+dependencies {
+
+    compile('org.codehaus.groovy:groovy-all:2.2.1')
+    
+    compile 'commons-logging:commons-logging:1.2'
+
+    compile 'eu.infomas:annotation-detector:3.0.4'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
