@@ -27,17 +27,20 @@ class TraceTargetRegistry {
     void unregisterMethod(Method method){
 //        println "unregistering $method"
         def signature = new MethodSignature(method.parameterTypes, method.varArgs)
-        def subregistry = registry[method.declaringClass.name][method.name]
-        subregistry.remove(signature)
-        if (subregistry.empty)
-            registry[method.declaringClass.name].remove(method.name)
+        def classRegistry = registry[method.declaringClass.name]
+        def methodRegistry = classRegistry[method.name]
+        methodRegistry.remove(signature)
+        if (methodRegistry.isEmpty())
+            classRegistry.remove(method.name)
+        if (classRegistry.isEmpty())
+            registry.remove(method.declaringClass.name)
     }
 
     TraceConfig getTraceConfig(Class clazz, String methodName, Object[] arguments){
         def className = clazz.name
         if (! (className in registry.keySet()))
             return null
-        if (! (methodName in registry[className]))
+        if (! (methodName in registry[className].keySet()))
             return null
         def subregistry = registry[className][methodName]
         def argClasses = arguments.collect {

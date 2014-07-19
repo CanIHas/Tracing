@@ -4,9 +4,14 @@ import groovy.transform.Canonical
 
 @Canonical
 class DefaultTraceFormatter implements TraceFormatter{
+
+    String className(Class clazz){
+        clazz.simpleName
+    }
+
     @Override
     List<String> formatOnCall(Class clazz, String methodName, Object[] args, boolean withArgs) {
-        def out = [ "${clazz.simpleName}#$methodName called" ]
+        def out = [ "${className(clazz)}#$methodName called" ]
         if (withArgs) {
             def argsLines = "${args as List}".split("\n")
             out[0] += " with args: ${argsLines.head()}"

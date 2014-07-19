@@ -13,6 +13,7 @@ import can.i.has.tracing.registry.TracingInterceptor
 import groovy.transform.Canonical
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import groovy.util.logging.Commons
 
 import java.lang.reflect.Method
 
@@ -189,6 +190,7 @@ class Tracer {
                 if (registry.registeredClasses.any {Class clz -> clz.isInstance(instance)}) {
                     //this is ugly, encapsulate it in some method
                     def newMeta = ExceptionAwareProxyMetaClass.getInstance(instance.class)
+                    newMeta.interceptor = interceptor
                     def oldMeta = instance.metaClass
                     instance.metaClass = newMeta
                     out.add(new Pair<Object, MetaClass>(instance, oldMeta))
@@ -199,7 +201,7 @@ class Tracer {
 
         protected void restoreMetaClasses(List<Pair<Object, MetaClass>> changedMetas) {
             changedMetas.each {
-                it[0].metaClass = it[1]
+                it.first.metaClass = it.second
             }
         }
     }

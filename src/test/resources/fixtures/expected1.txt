@@ -1,0 +1,8 @@
+[0] Clazz1#foo called with args: [2, 6]
+[1] Clazz1#baz called with args: [6]
+[2] Clazz1#baz called with args: [8, false]
+[2] Clazz1#baz returned result: 30
+[1] Clazz1#baz returned result: 42
+[1] Clazz1#bar called with args: [2, 42]
+[1] Clazz1#bar returned result: 86
+[0] Clazz1#foo returned result: 86
