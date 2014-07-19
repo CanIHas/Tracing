@@ -1,0 +1,7 @@
+[0] Clazz1#factorial called with args: [-1]
+[0] Clazz1#factorial throwed exception: Assertion failed:
+[0]
+[0] assert i>=0
+[0]        ||
+[0]        |false
+[0]        -1

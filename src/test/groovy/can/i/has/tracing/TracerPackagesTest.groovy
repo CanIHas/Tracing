@@ -9,10 +9,12 @@ import can.i.has.tracing.format.TraceEnhancer
 import can.i.has.tracing.format.TraceLevel
 
 
-class TracerPackagesTest extends GroovyTestCase {
+class TracerPackagesTest extends TracerTestCase{
     Clazz1 clazz1
     Tracer tracer
     String expected1
+    String failingFactorial
+    String plainFactorial
 
     void setUp(){
         tracer = new Tracer(
@@ -24,8 +26,14 @@ class TracerPackagesTest extends GroovyTestCase {
 //            new FileTraceDestination()
             new StringBufferDestination()
         )
-        def url = this.class.classLoader.getResource("fixtures/expected1.txt")
-        expected1 = url.text.trim()
+        expected1 = getFixture("fixtures/expected1.txt")
+        failingFactorial = getFixture("fixtures/failingFactorial.txt")
+        plainFactorial = getFixture("fixtures/plainFactorial.txt")
+        clazz1 = new Clazz1()
+    }
+
+    String getFixture(String path){
+        this.class.classLoader.getResource(path).text.trim()
     }
 
     void testStandardUseCaseWithPackage(){
@@ -33,22 +41,37 @@ class TracerPackagesTest extends GroovyTestCase {
             clazz1 = new Clazz1()
             clazz1.foo(2, 6)
         }
-        StringBufferDestination dest = tracer.destination
-        def buffer = dest.buffer
-        def actual = buffer.toString().trim()
-        assertEquals(expected1, actual)
+        def actual = tracer.destination.text
+        assertEqualTraces(expected1, actual)
     }
 
     //todo: consider swapping meta to saved.delegate (since wrapped with org.codehaus.groovy.runtime.HandleMetaClass)
     void testStandardUseCaseWithInstance(){
-        clazz1 = new Clazz1()
         tracer.withInstanceTraced(clazz1).
             _ {
             clazz1.foo(2, 6)
         }
-        StringBufferDestination dest = tracer.destination
-        def buffer = dest.buffer
-        def actual = buffer.toString().trim()
-        assertEquals(expected1, actual)
+        def actual = tracer.destination.text
+        assertEqualTraces(expected1, actual)
+    }
+
+    void testFailingFactorial(){
+        tracer.withInstanceTraced(clazz1).
+            _ {
+                try {
+                    clazz1.factorial(-1)
+                } catch (Throwable ignored) {}
+            }
+        def actual = tracer.destination.text
+        assertEqualTraces(failingFactorial, actual)
+    }
+
+    void testPlainFactorial(){
+        tracer.withInstanceTraced(clazz1).
+            _ {
+                clazz1.factorial(0) == clazz1.factorial(1)
+            }
+        def actual = tracer.destination.text
+        assertEqualTraces(plainFactorial, actual)
     }
 }

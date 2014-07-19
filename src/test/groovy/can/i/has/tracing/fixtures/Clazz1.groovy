@@ -18,4 +18,10 @@ class Clazz1 {
     int baz(int x, boolean recursive=true){
         (x-3)*(x-2) + (recursive?baz(x+2, false):0)
     }
+
+    @Trace
+    int factorial(int i) {
+        assert i>=0
+        i<2 ? 1 : i*factorial(i-1)
+    }
 }

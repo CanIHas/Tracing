@@ -1,0 +1,4 @@
+[0] Clazz1#factorial called with args: [0]
+[0] Clazz1#factorial returned result: 1
+[0] Clazz1#factorial called with args: [1]
+[0] Clazz1#factorial returned result: 1
