@@ -20,7 +20,7 @@ Tracer.GLOBAL = new Tracer(
 //    this.&println as TraceDestination
 )
 
-Tracer.GLOBAL.withPackageTraced("can.i.has") {
+Tracer.GLOBAL.withPackageTraced("can.i.has")._ {
     def x = new TracedClass1()
     x.method("a")
     x.method("a", 5)
