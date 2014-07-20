@@ -114,7 +114,45 @@ And that's basically it for this moment
 
 #### 2.1. Custom Tracer
 
-> THIS SECTIONS IS WIP
+OK, you're happy, because you can get nice trace on Slf4j (I assume you've read this docs at least once now). But let's
+assume that you need to trace in on custom level with Log4j. Also, you need only package name name of class which method
+was called. And... let's add uppercase method name to this...
+
+Let's generalize a little: you want to change the way of STORING gathered trace and/or you want to change the way
+trace is formatted. This is where two interfaces (and their implementations) come to play. Please, welcome `TraceDestination`
+and `TraceFormatter`!
+
+##### 2.1.1. can.i.haz.tracing.destination.TraceDestination
+
+The interface has only one method: `void trace(String msg)`.
+
+> Yeah, I know - one-method interfaces in Groovy with it's Closures? Yep, I did it. And I had good reason!
+> When does casting Closures to one-method interfaces is useful? When real implementation would be one-method too.
+> But what if we would like to implement some HTTP (for example REST) destination? Or maybe you'd like to delegate to
+> syslog? You'd probably end up with a little bigger class (not too big too, but still - more then one method). Now
+> you'd need to provide argument with method closured (like `implementation.&someMethod`). Now you can use simple object,
+> and Groovy will still cast closures to this interface!
+
+It is quite straight-forward - semantics of this method are "gather another line of performed trace". That's actually it.
+
+There are some provided implementations too (all in package `can.i.haz.tracing.destination`):
+
+* NullDestination - Empty method implementation. Useful for stubbing and some formatter-based hacks
+* StringBufferDestination - Implementation pushing every line to StringBuffer (joining them with newline) for which there
+    are accessors
+* StdOutDestination - Basically identical to System.out.&println.
+* FileTraceDestination - Each call to trace(String) appends argument to file (specified as instance attribute).
+* Slf4jTraceDestination, CommonsTraceDestination - logging frameworks destinations for Slf4j and Apache Commons
+    (respectively). They are parametrized with logger instance (defaulting to logger for destination class) and level
+    (defaulting to TRACE; in future implementations, as other frameworks are planned too, it will be the same or similiar
+    if absent).
+
+> There is nothing that would stop you from implementing your own destination. I will be happy to pull any request with
+> implementation from anyone.
+
+##### 2.1.2. TraceFormatter and further part of 2.1 - WIP
+
+> WIP, AS STATED.
 
 ### 3. Everybody do the flo... trace!
 
