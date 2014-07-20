@@ -4,7 +4,7 @@ apply plugin: 'idea'
 apply plugin: 'application'
 
 sourceCompatibility = 1.7
-version = '0.0.1-RESEARCH'
+version = '0.0.5'
 
 repositories {
     mavenCentral()

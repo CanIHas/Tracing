@@ -55,6 +55,18 @@ class Tracer {
         new TracingContext([], instances as List)
     }
 
+    public <T> T call(Closure<T> c) {
+        new TracingContext().call c
+    }
+
+    public <T> T _(Closure<T> c) {
+        call c
+    }
+
+    public <T> T leftShift(Closure<T> c){
+        call c
+    }
+
 
 //    public <T> T withPackageTraced(String pkgName, Closure<T> c){
 //        registry.registerPackage(pkgName)
@@ -122,7 +134,11 @@ class Tracer {
         }
 
         public <T> T _(Closure<T> c) {
-            call(c)
+            call c
+        }
+
+        public <T> T leftShift(Closure<T> c){
+            call c
         }
 
         protected <T> T withProxies(Closure<T> c) {

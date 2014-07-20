@@ -8,7 +8,7 @@ class TracerTestCase extends GroovyTestCase{
         actual = actual.trim()
         def expectedLines = expected.split("[\n]")
         def actualLines = actual.split("[\n]")
-        assertEquals("Traces are of different length!\nExpected: \n${expected}\n--\nActual:\n${actual}\n--", expectedLines.size(), actualLines.size())
+        assertEquals("Traces are of different length!\nExpected: \n${expected}\n--\nActual:\n${actual}\n--\n", expectedLines.size(), actualLines.size())
         def differentLines = []
         expectedLines.eachWithIndex { String exp, int i ->
             if (actualLines[i].trim() != exp.trim())

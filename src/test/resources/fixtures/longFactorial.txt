@@ -1,0 +1,16 @@
+[0] Clazz1#factorial called with args: [8]
+[1] Clazz1#factorial called with args: [7]
+[2] Clazz1#factorial called with args: [6]
+[3] Clazz1#factorial called with args: [5]
+[4] Clazz1#factorial called with args: [4]
+[5] Clazz1#factorial called with args: [3]
+[6] Clazz1#factorial called with args: [2]
+[7] Clazz1#factorial called with args: [1]
+[7] Clazz1#factorial returned result: 1
+[6] Clazz1#factorial returned result: 2
+[5] Clazz1#factorial returned result: 6
+[4] Clazz1#factorial returned result: 24
+[3] Clazz1#factorial returned result: 120
+[2] Clazz1#factorial returned result: 720
+[1] Clazz1#factorial returned result: 5040
+[0] Clazz1#factorial returned result: 40320

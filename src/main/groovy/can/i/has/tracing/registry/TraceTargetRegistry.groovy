@@ -17,11 +17,15 @@ class TraceTargetRegistry {
     Map<String, Map<String, Map<MethodSignature, TraceConfig>>> registry = [:]
 
     void registerMethod(Method method){
+        def traceConfig = TraceConfig.forAnnotation(method.getAnnotation(Trace))
+        registerMethod(method, traceConfig)
+    }
+
+    void registerMethod(Method method, TraceConfig traceConfig) {
 //        println "registering $method"
-        ensureStructure(method.declaringClass.name, method.name)
         def signature = new MethodSignature(method.parameterTypes, method.varArgs)
-        def traceOptions = TraceConfig.forAnnotation(method.getAnnotation(Trace))
-        registry[method.declaringClass.name][method.name][signature] = traceOptions
+        ensureStructure(method.declaringClass.name, method.name)
+        registry[method.declaringClass.name][method.name][signature] = traceConfig
     }
 
     void unregisterMethod(Method method){
