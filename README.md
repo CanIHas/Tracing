@@ -13,7 +13,7 @@ Shortest manual possible
 * Inspect (or not, like with logging destinations) trace
 * Profit
 
-A little longer manual
+A little bit longer manual
 ----------------------
 
 The whole lib is created for situations, when you need to debug something, and configuring debugger would be difficult
@@ -27,9 +27,14 @@ through the whole MOP (in Groovy) is too long, or when you're trying to run some
 debugging is harder - this may come handy.
 
 Annotating your code with Trace (can.i.haz.tracing.@Trace) has almost no effect - it only adds metadata to runtime
-(since annotation has retention level RUNTIME).
+(since annotation has retention level RUNTIME). This means that you can easily annotate methods you often trace while
+debugging and leave that even in production code - unless you activate tracing literally NOTHING happens because of this
+library on classpath.
 
-### Model
+In future annotation will probably be in different component, so you can even throw tracing logic out of main dependencies
+and keep it only in test dependencies.
+
+### Model (simplified)
 
 * TraceTargetRegistry (`can.i.haz.tracing.registry.TraceTargetRegistry`) - singleton keeping track of all classes with activated tracing,
             that is, all classes that has at least one annotation on its methods while those methods are "registered" -
@@ -58,12 +63,14 @@ Annotating your code with Trace (can.i.haz.tracing.@Trace) has almost no effect 
 > Full points are describing basic concepts, while subpoints describe them in more details.
 
 Lets consider class:
-`package some.package.you.have
 
-class A {
-    def foo(args) {...}
-    def bar(args) {...}
-}`
+    package some.package.you.have
+
+    class A {
+        def foo(args) {...}
+        def bar(args) {...}
+    }
+
 Assume that foo and bar call each other recursively, but you can't understand where is problem with that.
 
 It may be easier to see whole tree of calls, instead of debugging the whole thing - so you know what called what and with what.
@@ -73,17 +80,17 @@ and it would force you to mix logic of methods with logic of debugging. So, inst
 
 #### 1. Configure trace targets
 
-    First, you must state which methods you want to trace - and how do you want them to be traced. For now, just annotate
-    your methods with `@Trace`:
+First, you must state which methods you want to trace - and how do you want them to be traced. For now, just annotate
+your methods with `@Trace`:
 
-        class A {
-            @Trace
-            def foo(args) {...}
-            @Trace
-            def bar(args) {...}
-        }
+    class A {
+        @Trace
+        def foo(args) {...}
+        @Trace
+        def bar(args) {...}
+    }
 
-##### 1.1. *Customizing trace behaviour*
+##### 1.1. Customizing trace behaviour
 
 As you may have spotted, @Trace annotation has several parameters. They are all boolean, and have meaning as follows:
 
@@ -125,8 +132,9 @@ unregisters everything it registered itself. There is a little more to this, but
 mechanism - everything will be fine.
 
 There are some API-fluency-hacks for calling closure. Method `<T> TracingContext#call(Closure<T>)` has following aliases:
-    * `<T> TracingContext#_(Closure<T>)`
-    * `<T> TracingContext#leftShift(Closure<T>)`
+
+* `<T> TracingContext#_(Closure<T>)`
+* `<T> TracingContext#leftShift(Closure<T>)`
 
 In the end, there is no difference between `someContext.call({...})`, `someContext({...})`, `someContext._ {...}`,
 `someContext._({...})` and `someContext << {...}`.
@@ -135,13 +143,18 @@ In the end, there is no difference between `someContext.call({...})`, `someConte
 
 No, you don't. But this is WIP, so...
 
-> THIS SECTION IS WIP
+> THIS SECTION IS WIP AND FOR NOW YOU DO NEED ANNOTATIONS.
 
 ### 4. Profit - or do anything with trace
 
-So, you've called your code with trace enabled. As `Tracer.DEFAULT` uses `CommonsTraceDestination`
-(`can.i.has.tracing.destination.CommonsTraceDestination`), your call trace should be logged to Apache Commons logger
+So, you've called your code with trace enabled. As `Tracer.DEFAULT` uses `Slf4jTraceDestination`
+(`can.i.has.tracing.destination.Slf4jTraceDestination`), your call trace should be logged to Slf4j logger
 for this destination class with level "trace".
+
+> I'm gonna try to use Apache Commons in all CanIHas projects for the sake of Spring integration
+> Truth is, Apache Commons are hell lot of easier to configure. Truth is that, as this is realy early stage
+> of development, I'll stick with Slf4j here and I'll keep Apache Commons destination implemented, yet horribly
+> untested. Sorry folks, crucial matters first ;)
 
 In general - at this point you'll have your trace where you want it and how you want it. See (2.1) to read more on
 different destinations and formatters.
@@ -149,7 +162,120 @@ different destinations and formatters.
 Full-blown example
 ------------------
 
-> You probably haven't seen anything as WIP as this...
+Example is available on GIT repository. It is located in test sourceset (/src/test/groovy).
+
+### can.i.has.tracing.examples.MutualRecursion // traced class
+
+package can.i.has.tracing.examples
+
+    import can.i.has.tracing.Trace
+
+    class MutualRecursion {
+        @Trace
+        int f(int x) {
+            assert x>=0
+            x == 0 ? 1 : x - m(f(x-1))
+        }
+
+        @Trace
+        int m(int x) {
+            assert x>=0
+            x == 0 ? 0 : x - f(m(x-1))
+        }
+    }
+
+### can.i.has.tracing.example.MutualRecursionExample // tracing logic
+
+    package can.i.has.tracing.examples
+
+    import can.i.has.tracing.Tracer
+
+    Tracer.DEFAULT.withPackageTraced("can.i.has.tracing")._ {
+        def instance = new MutualRecursion()
+        instance.f(5)
+    }
+
+### simplelogger.properties // default logger configuration
+
+    org.slf4j.simpleLogger.defaultLogLevel=trace
+    org.slf4j.simpleLogger.showLogName=true
+    org.slf4j.simpleLogger.showDateTime=false
+    org.slf4j.simpleLogger.levelInBrackets=true
+
+    #org.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss|SSS
+
+    org.slf4j.simpleLogger.showShortLogName=false
+    org.slf4j.simpleLogger.showThreadName=false
+
+### Expected result log
+
+
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination - MutualRecursion#f called with args: [5]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -   MutualRecursion#f called with args: [4]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#f called with args: [3]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f called with args: [2]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#m called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -             MutualRecursion#m called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -             MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -             MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -             MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#m called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f returned result: 2
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m called with args: [2]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#m called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -           MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#f returned result: 2
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#m called with args: [2]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#m returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -   MutualRecursion#f returned result: 3
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -   MutualRecursion#m called with args: [3]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#m called with args: [2]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#m returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#f called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m called with args: [1]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f called with args: [0]
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -         MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -       MutualRecursion#m returned result: 0
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -     MutualRecursion#f returned result: 1
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination -   MutualRecursion#m returned result: 2
+    [TRACE] can.i.has.tracing.destination.Slf4jTraceDestination - MutualRecursion#f returned result: 3
 
 More to come...
 ---------------

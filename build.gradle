@@ -17,6 +17,8 @@ dependencies {
     compile('org.codehaus.groovy:groovy-all:2.2.1')
     
     compile 'commons-logging:commons-logging:1.2'
+    compile 'org.slf4j:slf4j-api:1.7.6'
+    compile 'org.slf4j:slf4j-simple:1.7.6'
 
     compile 'eu.infomas:annotation-detector:3.0.4'
 

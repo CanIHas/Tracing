@@ -1,6 +1,7 @@
 package can.i.has.tracing
 
 import can.i.has.tracing.destination.CommonsTraceDestination
+import can.i.has.tracing.destination.Slf4jTraceDestination
 import can.i.has.tracing.destination.TraceDestination
 import can.i.has.tracing.format.DefaultTraceFormatter
 import can.i.has.tracing.format.TraceEnhancer
@@ -24,7 +25,7 @@ class Tracer {
         TraceEnhancer.chain(
             new DefaultTraceFormatter(),
             new TraceLevel.IndentEnhancer()),
-        new CommonsTraceDestination()
+        new Slf4jTraceDestination()
     )
     static Tracer GLOBAL = DEFAULT
 
@@ -203,7 +204,9 @@ class Tracer {
         private List<Pair<Object, MetaClass>> changeMetaClasses(){
             def out = []
             instances.each { instance ->
-                if (registry.registeredClasses.any {Class clz -> clz.isInstance(instance)}) {
+                //this should be findAll, and we should find highest commons supertype
+                def instancesClass = registry.registeredClasses.find {Class clz -> clz.isInstance(instance)}
+                if (instancesClass!=null && !(instance.class.metaClass instanceof ExceptionAwareProxyMetaClass)) {
                     //this is ugly, encapsulate it in some method
                     def newMeta = ExceptionAwareProxyMetaClass.getInstance(instance.class)
                     newMeta.interceptor = interceptor
