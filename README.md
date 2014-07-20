@@ -122,7 +122,7 @@ Let's generalize a little: you want to change the way of STORING gathered trace 
 trace is formatted. This is where two interfaces (and their implementations) come to play. Please, welcome `TraceDestination`
 and `TraceFormatter`!
 
-##### 2.1.1. can.i.haz.tracing.destination.TraceDestination
+##### 2.1.1. `can.i.haz.tracing.destination.TraceDestination`
 
 The interface has only one method: `void trace(String msg)`.
 
@@ -137,22 +137,61 @@ It is quite straight-forward - semantics of this method are "gather another line
 
 There are some provided implementations too (all in package `can.i.haz.tracing.destination`):
 
-* NullDestination - Empty method implementation. Useful for stubbing and some formatter-based hacks
-* StringBufferDestination - Implementation pushing every line to StringBuffer (joining them with newline) for which there
+* `NullDestination` - Empty method implementation. Useful for stubbing and some formatter-based hacks
+* `StringBufferDestination` - Implementation pushing every line to StringBuffer (joining them with newline) for which there
     are accessors
-* StdOutDestination - Basically identical to System.out.&println.
-* FileTraceDestination - Each call to trace(String) appends argument to file (specified as instance attribute).
-* Slf4jTraceDestination, CommonsTraceDestination - logging frameworks destinations for Slf4j and Apache Commons
+* `StdOutDestination` - Basically identical to System.out.&println.
+* `FileTraceDestination` - Each call to trace(String) appends argument to file (specified as instance attribute).
+* `Slf4jTraceDestination`, `CommonsTraceDestination` - logging frameworks destinations for `Slf4j` and `Apache Commons`
     (respectively). They are parametrized with logger instance (defaulting to logger for destination class) and level
-    (defaulting to TRACE; in future implementations, as other frameworks are planned too, it will be the same or similiar
+    (defaulting to `TRACE`; in future implementations, as other frameworks are planned too, it will be the same or similiar
     if absent).
 
 > There is nothing that would stop you from implementing your own destination. I will be happy to pull any request with
 > implementation from anyone.
 
-##### 2.1.2. TraceFormatter and further part of 2.1 - WIP
+##### 2.1.2. `can.i.haz.tracing.format.TraceFormatter` and `can.i.haz.tracing.format.TraceEnhancer`
 
-> WIP, AS STATED.
+Interface `can.i.haz.tracing.format.TraceFormatter` has 3 methods:
+
+    List<String> formatOnCall(Class clazz, String methodName, Object[] args, boolean withArgs)
+    List<String> formatOnReturn(Class clazz, String methodName, Object[] args,
+                                Object result, boolean withResult)
+    List<String> formatOnThrow(Class clazz, String methodName, Object[] args,
+                               Throwable throwable, boolean withThrowable, boolean withStackTrace)
+
+Hopefully, they are quite self-explanatory. Specifically, they are called before method call, after method returning
+and after method throwing (if trace config states they should be called). They should return list of strings, each of
+which will be passed to trace destinations `trace(String)`.
+
+There are two provided implementations (all in package `can.i.haz.tracing.destination`):
+
+* `DefaultTraceFormatter` - Default implementation, using simple class name, method name, optional objects `toString` and
+    short description of event.
+* `CanonicalNameTraceFormatter` - Similiar to default implementation, but using canonical class name instead of simple.
+
+Abstract class `can.i.haz.tracing.format.TraceEnhancer` has one abstract method: `String enhance(String msg)` and one
+method that you may want to override `List<String> enhance(List<String> msgs)`. Non-abstract one (parametrized with
+and returning Lists of Strings) just maps abstract one on argument. Second one should enhance single line of trace.
+Ideally none of them (methods) should have side-effects.
+
+`TraceEnhancer`s are already `TraceFormatter`s - by default they delegate to other formatter and enhance its returned
+lines.
+
+There are some provided implementations (all in package `can.i.haz.tracing.destination`):
+
+* `DateEnhancer` - Adds date (`new Date()`) formatted with customizable `SimpleDateFormat` to the beginning of each line.
+* `TraceLevel.Enhancer`, `TraceLevel.IndentEnhancer` (both static inner classes) - both base on current trace level
+    (trace level starts with 0, increments with each traced method call and decrements with each return or throw). First
+     one adds trace level in customizable brackets (and additional space for nice chaining) to the beginning of each line.
+     Second one indents each line (with customizable single-indent string) according to trace level.
+
+Also, there is `TraceLevel` singleton available, keeping current trace level.
+
+> `TraceEnhancer`s shouldn't try to modify current trace level, but this is contract, not technical restriction.
+> Please, stick to `int getLvl()` method.
+
+> ALSO, FURTHER TEXT WIP
 
 ### 3. Everybody do the flo... trace!
 
