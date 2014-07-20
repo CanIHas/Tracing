@@ -4,23 +4,23 @@ import groovy.transform.Canonical
 
 @Canonical
 abstract class TraceEnhancer implements TraceFormatter{
-    TraceFormatter formatter
+    TraceFormatter delegate
 
     @Override
     List<String> formatOnCall(Class clazz, String methodName, Object[] args, boolean withArgs) {
-        enhance(formatter.formatOnCall(clazz, methodName, args, withArgs))
+        enhance(delegate.formatOnCall(clazz, methodName, args, withArgs))
     }
 
     @Override
     List<String> formatOnReturn(Class clazz, String methodName, Object[] args,
                                 Object result, boolean withResult) {
-        enhance(formatter.formatOnReturn(clazz, methodName, args, result, withResult))
+        enhance(delegate.formatOnReturn(clazz, methodName, args, result, withResult))
     }
 
     @Override
     List<String> formatOnThrow(Class clazz, String methodName, Object[] args,
                                Throwable throwable, boolean withThrowable, boolean withStackTrace) {
-        enhance(formatter.formatOnThrow(clazz, methodName, args, throwable,
+        enhance(delegate.formatOnThrow(clazz, methodName, args, throwable,
             withThrowable, withStackTrace))
     }
 
@@ -35,7 +35,7 @@ abstract class TraceEnhancer implements TraceFormatter{
     static TraceFormatter chain (TraceFormatter formatter, TraceEnhancer... enhancers){
         def result = formatter
         enhancers.each {
-            it.formatter = result
+            it.delegate = result
             result = it
         }
         result

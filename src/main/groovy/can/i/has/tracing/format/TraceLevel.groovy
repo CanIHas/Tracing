@@ -25,8 +25,8 @@ class TraceLevel {
         final String leftBracket = "["
         final String rightBracket = "]"
 
-//        Enhancer(TraceFormatter formatter, String leftBracket="[", String rightBracket="]") {
-//            super(formatter)
+//        Enhancer(TraceFormatter delegate, String leftBracket="[", String rightBracket="]") {
+//            super(delegate)
 //            this.leftBracket=leftBracket
 //            this.rightBracket=rightBracket
 //        }
@@ -41,8 +41,8 @@ class TraceLevel {
     static class IndentEnhancer extends TraceEnhancer{
         final String indent = "  "
 
-//        IndentEnhancer(TraceFormatter formatter, String indent="  ") {
-//            super(formatter)
+//        IndentEnhancer(TraceFormatter delegate, String indent="  ") {
+//            super(delegate)
 //            this.indent=indent
 //        }
 

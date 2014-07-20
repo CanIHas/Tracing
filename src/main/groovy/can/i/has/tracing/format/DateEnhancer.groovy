@@ -9,8 +9,8 @@ class DateEnhancer extends TraceEnhancer{
 
     final DateFormat dateFormat = DateFormat.timeInstance
 
-//    DateEnhancer(TraceFormatter formatter, DateFormat dateFormat = DateFormat.timeInstance) {
-//        super(formatter)
+//    DateEnhancer(TraceFormatter delegate, DateFormat dateFormat = DateFormat.timeInstance) {
+//        super(delegate)
 //        this.dateFormat=dateFormat
 //    }
 

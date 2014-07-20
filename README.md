@@ -7,9 +7,12 @@ is not enough.
 Shortest manual possible
 ------------------------
 
-* Annotate wanted methods with @Traced, configuring each of them with proper boolean attributes (like withArgs or onExit)
-* Somehow obtain and configure Tracer - you may change formatter ("how does trace look like?") and trace destination ("where is trace stored?")
-* Register some packages or single classes and run closure with trace; optionally, specify classes and packages to register in running methods arguments
+* Annotate wanted methods with `@Traced`, configuring each of them with proper boolean attributes (like withArgs or
+    onExit)
+* Somehow obtain and configure `Tracer` - you may change formatter ("how does trace look like?") and trace destination
+    ("where is trace stored?")
+* Register some packages or single classes and run closure with trace; optionally, specify classes and packages to
+    register in running methods arguments
 * Inspect (or not, like with logging destinations) trace
 * Profit
 
@@ -26,8 +29,8 @@ It may not be best practice to use code like this in production, but when you're
 through the whole MOP (in Groovy) is too long, or when you're trying to run something on application server and
 debugging is harder - this may come handy.
 
-Annotating your code with Trace (can.i.haz.tracing.@Trace) has almost no effect - it only adds metadata to runtime
-(since annotation has retention level RUNTIME). This means that you can easily annotate methods you often trace while
+Annotating your code with `Trace` (`can.i.haz.tracing.@Trace`) has almost no effect - it only adds metadata to runtime
+(since annotation has retention level `RUNTIME`). This means that you can easily annotate methods you often trace while
 debugging and leave that even in production code - unless you activate tracing literally NOTHING happens because of this
 library on classpath.
 
@@ -176,7 +179,8 @@ and returning Lists of Strings) just maps abstract one on argument. Second one s
 Ideally none of them (methods) should have side-effects.
 
 `TraceEnhancer`s are already `TraceFormatter`s - by default they delegate to other formatter and enhance its returned
-lines.
+lines. This means that there always is attribute TraceFormatter delegate. You probably want to inject it in constructor
+while subclassing.
 
 There are some provided implementations (all in package `can.i.haz.tracing.destination`):
 
@@ -191,7 +195,35 @@ Also, there is `TraceLevel` singleton available, keeping current trace level.
 > `TraceEnhancer`s shouldn't try to modify current trace level, but this is contract, not technical restriction.
 > Please, stick to `int getLvl()` method.
 
-> ALSO, FURTHER TEXT WIP
+`TraceEnhancer` has also one static method: `TraceFormatter chain (TraceFormatter formatter, TraceEnhancer... enhancers)`.
+It allows more verbose enhancer chaining. Instead of (possibly without usage of map argument):
+
+    formatter = new EnhancerA(delegate: new EnhancerB(delegate: new Formatter()))
+
+you may write:
+
+    formatter = TraceEnhancer.chain(new Formatter(), new EnhancerA(), new EnhancerB())
+
+##### 2.1.3. Customizing `Tracer`
+
+As we know what destinations and formatters are, we can now build Tracer instance in easiest possible way - with
+constructor `Tracer(TraceFormatter formatter, TraceDestination destination)`. Here are definitions of pre-defined
+tracers (actually, one tracer):
+
+    class Tracer {
+        final static Tracer DEFAULT = new Tracer(
+            TraceEnhancer.chain(
+                new DefaultTraceFormatter(),
+                new TraceLevel.IndentEnhancer()),
+            new Slf4jTraceDestination()
+        )
+        static Tracer GLOBAL = DEFAULT
+
+        ...
+    }
+
+It may be useful to assign your own Tracer.GLOBAL and use it in every situation, to keep consistent formatting and
+destination.
 
 ### 3. Everybody do the flo... trace!
 
@@ -357,8 +389,10 @@ package can.i.has.tracing.examples
 More to come...
 ---------------
 
-> For real
-
+> For real. In short:
+> * There are more tests coming;
+> * I'll soon finish this doc
+> * There will be some text on thread-safety, and this lib WILL be thread-safe, but not yet
 
 Version
 -------
@@ -373,3 +407,16 @@ They are stored in repos of CanIHaz organization, and are written with fluent AP
  but do it right") in mind.
 
  This is just a stub of CanIHaz description. Time is finite, unfortunately...
+
+In short (again):
+* Yes, I DO need help. I'm trying to refactor some of my side-projects and put them on GitHub, but I won't probably have
+    time to keep them all up-to-date and fix too many bugs.
+* There is also another CanIHas project: GDocOpt, literal port of cool python library. There are more in my mind, like
+    some microframework, making Jython scripting easier, or some AST transformations changing argument dispatch to more
+    pythonic semantics.
+* I must work on licences - MY code is, and will be MIT, but I must add note about some people (like DocOpt creators and
+    author of post on which I based ProxyMetaClass subclass).
+* Again - you are welcome to collaborate. Not only because I need help, but if you want to help this lib, because you
+    find it useful or nice - go on ;)
+* There will be MVN distributions as soon as code will stabilize a little.
+* I'd like to use continuous integration soon, but I first have to find Jenkins provider, or some other free CI server.
