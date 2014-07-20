@@ -71,7 +71,7 @@ It may be easier to see whole tree of calls, instead of debugging the whole thin
 Using AOP here would be overkill, and adding log.debug(...) at the beginning and end of foo and bar would be... well, ugly
 and it would force you to mix logic of methods with logic of debugging. So, instead, we use `can.i.has.tracing`.
 
-1. **Configure trace targets**
+#### 1. Configure trace targets
 
     First, you must state which methods you want to trace - and how do you want them to be traced. For now, just annotate
     your methods with `@Trace`:
@@ -83,70 +83,71 @@ and it would force you to mix logic of methods with logic of debugging. So, inst
             def bar(args) {...}
         }
 
-    1.1. *Customizing trace behaviour*
+##### 1.1. *Customizing trace behaviour*
 
-        As you may have spotted, @Trace annotation has several parameters. They are all boolean, and have meaning as follows:
+As you may have spotted, @Trace annotation has several parameters. They are all boolean, and have meaning as follows:
 
-        | Parameter      | Meaning                                                       |
-        |----------------|---------------------------------------------------------------|
-        | onEnter        | Should fact of calling target method be gathered?             |
-        | withArgs       | If not onEnter - ignored; else - should arguments be gathered together with fact of method call? |
-        | onReturn       | Should fact of target method returning be gathered?           |
-        | withResult     | If not onReturn - ignored; else - should result of the call be gathered together with fact of method returning? |
-        | onThrow        | Should fact of target method throwing anything be gathered?   |
-        | withException  | If not onThrow - ignored; else - should thrown exception (throwable in general) be gathered together with fact of method throwing? |
-        | withStackTrace | If not onThrow - ignored; else - should throwables stack tracebe gathered together with fact of method throwing? |
+| Parameter      | Meaning                                                       |
+|----------------|---------------------------------------------------------------|
+| onEnter        | Should fact of calling target method be gathered?             |
+| withArgs       | If not onEnter - ignored; else - should arguments be gathered together with fact of method call? |
+| onReturn       | Should fact of target method returning be gathered?           |
+| withResult     | If not onReturn - ignored; else - should result of the call be gathered together with fact of method returning? |
+| onThrow        | Should fact of target method throwing anything be gathered?   |
+| withException  | If not onThrow - ignored; else - should thrown exception (throwable in general) be gathered together with fact of method throwing? |
+| withStackTrace | If not onThrow - ignored; else - should throwables stack tracebe gathered together with fact of method throwing? |
 
-2. ** Obtain Tracer**
+### 2. Obtain Tracer
 
-    For this example, we'll use preformatted tracer - Tracer.DEFAULT:
+For this example, we'll use preformatted tracer - Tracer.DEFAULT:
 
-        def tracer = Tracer.DEFAULT
+    def tracer = Tracer.DEFAULT
 
-    And that's basically it for this moment
+And that's basically it for this moment
 
-    2.1. * Custom Tracer *
+#### 2.1. Custom Tracer
 
-        > THIS SECTIONS IS WIP
+> THIS SECTIONS IS WIP
 
-3. ** Everybody do the flo... trace! **
+### 3. Everybody do the flo... trace!
 
-    Now it's time to perform your tracing. Lets do this in easiest way:
+Now it's time to perform your tracing. Lets do this in easiest way:
 
-        tracer.withPackageTraced("some.package.you")({ // no args here; package must contain class A
-            def a = new A()
-            a.foo(1, 2, 3)
-        })
+    tracer.withPackageTraced("some.package.you")({ // no args here; package must contain class A
+        def a = new A()
+        a.foo(1, 2, 3)
+    })
 
-    `Trace#withPackageTraced(String)` creates `TracingContext` object, remembering proper package. As context is callable
-    (with Closure parameter), we call it with what we want to run with trace. `TracingContext#call(Closure)` registers
-    all annotated methods found in remembered packages in `TraceTargetRegistry` instance, calls closure, and then
-    unregisters everything it registered itself. There is a little more to this, but unless you'll try to outsmart simple
-    mechanism - everything will be fine.
+`Trace#withPackageTraced(String)` creates `TracingContext` object, remembering proper package. As context is callable
+(with Closure parameter), we call it with what we want to run with trace. `TracingContext#call(Closure)` registers
+all annotated methods found in remembered packages in `TraceTargetRegistry` instance, calls closure, and then
+unregisters everything it registered itself. There is a little more to this, but unless you'll try to outsmart simple
+mechanism - everything will be fine.
 
-    There are some API-fluency-hacks for calling closure. Method `<T> TracingContext#call(Closure<T>)` has following aliases:
-        * `<T> TracingContext#_(Closure<T>)`
-        * `<T> TracingContext#leftShift(Closure<T>)`
+There are some API-fluency-hacks for calling closure. Method `<T> TracingContext#call(Closure<T>)` has following aliases:
+    * `<T> TracingContext#_(Closure<T>)`
+    * `<T> TracingContext#leftShift(Closure<T>)`
 
-    In the end, there is no difference between `someContext.call({...})`, `someContext({...})`, `someContext._ {...}`,
-    `someContext._({...})` and `someContext << {...}`.
+In the end, there is no difference between `someContext.call({...})`, `someContext({...})`, `someContext._ {...}`,
+`someContext._({...})` and `someContext << {...}`.
 
-    3.1. * Do I really need annotations? *
+#### 3.1. Do I really need annotations?
 
-        No, you don't. But this is WIP, so...
+No, you don't. But this is WIP, so...
 
-       > THIS SECTION IS WIP
+> THIS SECTION IS WIP
 
-4. ** Profit - or do anything with trace **
+### 4. Profit - or do anything with trace
 
-    So, you've called your code with trace enabled. As `Tracer.DEFAULT` uses `CommonsTraceDestination`
-    (`can.i.has.tracing.destination.CommonsTraceDestination`), your call trace should be logged to Apache Commons logger
-    for this destination class with level "trace".
+So, you've called your code with trace enabled. As `Tracer.DEFAULT` uses `CommonsTraceDestination`
+(`can.i.has.tracing.destination.CommonsTraceDestination`), your call trace should be logged to Apache Commons logger
+for this destination class with level "trace".
 
-    In general - at this point you'll have your trace where you want it and how you want it. See (2.1) to read more on
-    different destinations and formatters.
+In general - at this point you'll have your trace where you want it and how you want it. See (2.1) to read more on
+different destinations and formatters.
 
-### Full-blown example
+Full-blown example
+------------------
 
 > You probably haven't seen anything as WIP as this...
 
