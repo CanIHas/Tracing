@@ -16,9 +16,10 @@ class TracingInterceptor implements ExceptionAwareInterceptor{
     Object beforeInvoke(Object object, String methodName, Object[] arguments) {
         def options = TraceTargetRegistry.instance.getTraceConfig(object.class, methodName, arguments)
         if (options) {
-            formatter.formatOnCall(object.class, methodName, arguments, options.withArgs).each {
-                destination.trace(it)
-            }
+            if (options.onEnter)
+                formatter.formatOnCall(object.class, methodName, arguments, options.withArgs).each {
+                    destination.trace(it)
+                }
             TraceLevel.instance.enter()
         }
     }
@@ -28,9 +29,10 @@ class TracingInterceptor implements ExceptionAwareInterceptor{
         def options = TraceTargetRegistry.instance.getTraceConfig(object.class, methodName, arguments)
         if (options) {
             TraceLevel.instance.leave()
-            formatter.formatOnReturn(object.class, methodName, arguments, result, options.withResult).each {
-                destination.trace(it)
-            }
+            if (options.onReturn)
+                formatter.formatOnReturn(object.class, methodName, arguments, result, options.withResult).each {
+                    destination.trace(it)
+                }
         }
         result
 
@@ -46,10 +48,11 @@ class TracingInterceptor implements ExceptionAwareInterceptor{
         def options = TraceTargetRegistry.instance.getTraceConfig(object.class, methodName, arguments)
         if (options) {
             TraceLevel.instance.leave()
-            formatter.formatOnThrow(object.class, methodName, arguments,
-                t, options.withException, options.withStackTrace).each {
-                destination.trace(it)
-            }
+            if (options.onThrow)
+                formatter.formatOnThrow(object.class, methodName, arguments,
+                    t, options.withException, options.withStackTrace).each {
+                    destination.trace(it)
+                }
 
         }
         true

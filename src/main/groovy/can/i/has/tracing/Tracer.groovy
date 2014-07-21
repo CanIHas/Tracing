@@ -57,7 +57,7 @@ class Tracer {
     }
 
     public <T> T call(Closure<T> c) {
-        new TracingContext().call c
+        new TracingContext([], []).call c
     }
 
     public <T> T _(Closure<T> c) {
@@ -67,36 +67,6 @@ class Tracer {
     public <T> T leftShift(Closure<T> c){
         call c
     }
-
-
-//    public <T> T withPackageTraced(String pkgName, Closure<T> c){
-//        registry.registerPackage(pkgName)
-//        def out = withTrace(c)
-//        registry.unregisterPackage(pkgName)
-//        out
-//    }
-//
-//    protected <T> T withTrace(List<ExceptionAwareProxyMetaClass> proxies, Closure<T> c){
-////        println "withTrace(proxies: $proxies, c: ${c.toString()})"
-//        if (proxies.empty) {
-////            println "empty proxies"
-//            return c();
-//        }
-//        ProxyMetaClass proxy = proxies.head()
-//        proxy.interceptor = interceptor
-//        if (proxies.tail()) {
-////            println "proxies.head ${proxies.head()} ||.tail() ${proxies.tail()}"
-//            return proxy.use {
-//                withTrace(proxies.tail(), c)
-//            }
-//        }
-////        println "proxies.head ${proxies.head()}"
-//        proxy.use c
-//    }
-//
-//    protected <T> T withTrace(Closure<T> closure){
-//        withTrace(registry.proxyMetaClasses, closure)
-//    }
 
     // consider creating yet another level of nesting: Tracer.TracingContext.State (containing info
     // on all registered packages and methods during this tracing

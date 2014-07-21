@@ -5,6 +5,21 @@ import groovy.transform.Canonical
 @Canonical
 class DefaultTraceFormatter implements TraceFormatter{
 
+    // I'm developing with IntelliJ IDEA; if anyone want's to colaborate, feel free
+    // to add you runners package here too - redundant packages have no negative
+    // effect of test outcome
+
+    List<String> ignoredPackages = [
+        "org.codehaus.groovy",
+        "sun.reflect",
+        "groovy.lang",
+        "java.lang",
+        "junit",
+        "org.junit",
+        "com.intellij"
+    ]
+
+
     String className(Class clazz){
         clazz.simpleName
     }
@@ -23,7 +38,7 @@ class DefaultTraceFormatter implements TraceFormatter{
     @Override
     List<String> formatOnReturn(Class clazz, String methodName, Object[] args,
                                 Object result, boolean withResult) {
-        def out =  ["${clazz.simpleName}#$methodName returned" ]
+        def out =  ["${className(clazz)}#$methodName returned" ]
         if (withResult) {
             def resultLines = "$result".split("\n")
             out[0] += " result: ${resultLines.head()}"
@@ -35,16 +50,23 @@ class DefaultTraceFormatter implements TraceFormatter{
     @Override
     List<String> formatOnThrow(Class clazz, String methodName, Object[] args,
                                Throwable throwable, boolean withThrowable, boolean withStackTrace) {
-        def out = ["${clazz.simpleName}#$methodName throwed exception" ]
+        def out = ["${className(clazz)}#$methodName throwed exception" ]
         if (withThrowable) {
             def throwableLines = "$throwable".split("\n")
             out[0] += ": ${throwableLines.head()}"
             out.addAll throwableLines.tail()
         }
         if (withStackTrace)
-            out.addAll throwable.stackTrace.collect {StackTraceElement ste ->
-                "$ste"
-            }
+            out.addAll formatStackTrace(throwable.stackTrace as List<StackTraceElement>)
+//            out.addAll throwable.stackTrace.collect {StackTraceElement ste ->
+//                "$ste"
+//            }
         return out
+    }
+
+    List<String> formatStackTrace(List<StackTraceElement> stack){
+        stack.
+            collect { "$it" }.
+            findAll { String line -> !ignoredPackages.any { line.startsWith(it) }}
     }
 }
