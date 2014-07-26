@@ -1,13 +1,7 @@
 package can.i.has.tracing
 
-import can.i.has.tracing.destination.FileTraceDestination
-import can.i.has.tracing.destination.StdOutDestination
 import can.i.has.tracing.destination.StringBufferDestination
 import can.i.has.tracing.fixtures.Clazz1
-import can.i.has.tracing.format.DefaultTraceFormatter
-import can.i.has.tracing.format.TraceEnhancer
-import can.i.has.tracing.format.TraceLevel
-
 
 class TracerFixturesTest extends TracerTestCase{
     Clazz1 clazz1
@@ -19,13 +13,9 @@ class TracerFixturesTest extends TracerTestCase{
 
     void setUp(){
         tracer = new Tracer(
-            TraceEnhancer.chain(
-                new DefaultTraceFormatter(),
-                new TraceLevel.Enhancer()
-            ),
-//            new StdOutDestination()
-//            new FileTraceDestination()
-            new StringBufferDestination()
+            Tracer.DEFAULT.formatter,
+            new StringBufferDestination(),
+            Tracer.DEFAULT.eventBus.listeners
         )
         expected1 = getFixture("fixtures/expected1.txt")
         failingFactorial = getFixture("fixtures/failingFactorial.txt")

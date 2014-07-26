@@ -1,8 +1,8 @@
 package can.i.has.tracing.registry
 
-import eu.infomas.annotation.AnnotationDetector
 import can.i.has.tracing.Trace
 import can.i.has.tracing.meta.ExceptionAwareProxyMetaClass
+import eu.infomas.annotation.AnnotationDetector
 
 import groovy.transform.Canonical
 import groovy.util.logging.Commons

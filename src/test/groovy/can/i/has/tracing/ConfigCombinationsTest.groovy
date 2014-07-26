@@ -2,7 +2,7 @@ package can.i.has.tracing
 
 import can.i.has.tracing.destination.StringBufferDestination
 import can.i.has.tracing.fixtures.FixtureForCombinations
-import can.i.has.tracing.format.DefaultTraceFormatter
+import can.i.has.tracing.format.CustomizableTraceFormatter
 import can.i.has.tracing.format.TraceFormatter
 import can.i.has.tracing.registry.TraceConfig
 import can.i.has.tracing.registry.TraceTargetRegistry
@@ -15,9 +15,8 @@ class ConfigCombinationsTest extends TracerTestCase{
 
     void setUp(){
         registry = TraceTargetRegistry.instance
-        formatter = new DefaultTraceFormatter()
+        formatter = new CustomizableTraceFormatter()
 
-        formatter.ignoredPackages.addAll "junit", "org.junit", "com.intellij"
         destination = new StringBufferDestination()
         tracer = new Tracer(formatter, destination)
     }

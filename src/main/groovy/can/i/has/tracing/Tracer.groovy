@@ -1,12 +1,14 @@
 package can.i.has.tracing
 
-import can.i.has.tracing.destination.CommonsTraceDestination
 import can.i.has.tracing.destination.Slf4jTraceDestination
 import can.i.has.tracing.destination.TraceDestination
-import can.i.has.tracing.format.DefaultTraceFormatter
+import can.i.has.tracing.events.LevelTrackingListener
+import can.i.has.tracing.events.TraceListener
+import can.i.has.tracing.events.TracerEventsBus
+import can.i.has.tracing.format.CustomizableTraceFormatter
+import can.i.has.tracing.format.LevelValueEnhancer
 import can.i.has.tracing.format.TraceEnhancer
 import can.i.has.tracing.format.TraceFormatter
-import can.i.has.tracing.format.TraceLevel
 import can.i.has.tracing.meta.ExceptionAwareProxyMetaClass
 import can.i.has.tracing.registry.TraceTargetRegistry
 import can.i.has.tracing.registry.TracingInterceptor
@@ -14,30 +16,41 @@ import can.i.has.tracing.registry.TracingInterceptor
 import groovy.transform.Canonical
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import groovy.util.logging.Commons
 
 import java.lang.reflect.Method
 
+//todo: tracing context should allow pool size customization (and timeouts in future?)
 @ToString
 @EqualsAndHashCode
 class Tracer {
-    final static Tracer DEFAULT = new Tracer(
-        TraceEnhancer.chain(
-            new DefaultTraceFormatter(),
-            new TraceLevel.IndentEnhancer()),
-        new Slf4jTraceDestination()
-    )
+    final static Tracer DEFAULT = getDefaultTracer()
     static Tracer GLOBAL = DEFAULT
+
+    private static Tracer getDefaultTracer(){
+        def levelListener = new LevelTrackingListener()
+        new Tracer(
+            TraceEnhancer.chain(
+                new CustomizableTraceFormatter(),
+                new LevelValueEnhancer(levelListener)
+            ),
+            new Slf4jTraceDestination(),
+            [levelListener]
+        )
+    }
 
     final TraceFormatter formatter
     final TraceDestination destination
+    protected final TracerEventsBus eventBus
     protected final TracingInterceptor interceptor
     final TraceTargetRegistry registry = TraceTargetRegistry.instance
 
-    Tracer(TraceFormatter formatter, TraceDestination destination) {
+    Tracer(TraceFormatter formatter, TraceDestination destination, List<TraceListener> listeners = []) {
         this.formatter = formatter
         this.destination = destination
-        this.interceptor = new TracingInterceptor(destination, formatter)
+        this.eventBus = new TracerEventsBus()
+        this.interceptor = new TracingInterceptor(destination, formatter, eventBus)
+        listeners.each eventBus.&registerListener
+
     }
 
     TracingContext withPackageTraced(String pkgName) {
@@ -98,9 +111,11 @@ class Tracer {
         }
 
         public <T> T call(Closure<T> c) {
+            eventBus.start()
             packages.each registry.&registerPackage
             T out = withProxies(this.&withInstances.curry(c))
             packages.each registry.&unregisterPackage
+            eventBus.stop()
             out
         }
 

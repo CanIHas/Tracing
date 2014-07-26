@@ -5,14 +5,11 @@ sourceCompatibility = 1.7
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'idea'
-apply plugin: 'application'
-apply plugin: 'java'
+apply plugin: 'maven'
 
 repositories {
     mavenCentral()
 }
-
-mainClassName = "can.i.has.tracing.TestScript"
 
 dependencies {
 

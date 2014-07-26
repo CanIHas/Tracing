@@ -1,6 +1,10 @@
 Tracing
 =======
 
+> This README is a little deprecated. Trace formatting has changed, and there is new way of handling trace state
+> (event-based). In general, this should explain main concepts, but I need to work on it a little.
+> Also, thanks to my friend, I have a short list of language mistakes I've commited here - that will be fixed soon too.
+
 Simple tracing for situations, when AOP is too much and by-hand logging at the beginning and end of each method
 is not enough.
 
